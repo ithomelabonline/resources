@@ -6,6 +6,9 @@ services:
     image: qmcgaw/gluetun:latest
     container_name: gluetun
     restart: unless-stopped
+    env_file:
+      - /media/docker/scripts/.env
+      - /media/docker/secrets/.env.secrets
     labels:
       - "com.centurylinklabs.watchtower.enable=true"
     cap_add:
@@ -32,6 +35,9 @@ services:
     image: lscr.io/linuxserver/transmission:latest
     container_name: transmission
     restart: unless-stopped
+    env_file:
+      - /media/docker/scripts/.env
+      - /media/docker/secrets/.env.secrets
     labels:
       - "com.centurylinklabs.watchtower.enable=true"
     network_mode: "service:gluetun"
@@ -50,6 +56,9 @@ services:
     container_name: ts-transmission
     hostname: transmission
     restart: unless-stopped
+    env_file:
+      - /media/docker/scripts/.env
+      - /media/docker/secrets/.env.secrets
     labels:
       - "com.centurylinklabs.watchtower.enable=true"
     cap_add:
@@ -75,6 +84,9 @@ services:
     image: lscr.io/linuxserver/prowlarr:latest
     container_name: prowlarr
     restart: unless-stopped
+    env_file:
+      - /media/docker/scripts/.env
+      - /media/docker/secrets/.env.secrets
     labels:
       - "com.centurylinklabs.watchtower.enable=true"
     network_mode: "service:gluetun"
@@ -92,6 +104,9 @@ services:
     container_name: ts-prowlarr
     hostname: prowlarr
     restart: unless-stopped
+    env_file:
+      - /media/docker/scripts/.env
+      - /media/docker/secrets/.env.secrets
     labels:
       - "com.centurylinklabs.watchtower.enable=true"
     cap_add:
@@ -118,6 +133,9 @@ services:
     container_name: flaresolverr
     network_mode: "service:gluetun"
     restart: unless-stopped
+    env_file:
+      - /media/docker/scripts/.env
+      - /media/docker/secrets/.env.secrets
     labels:
       - "com.centurylinklabs.watchtower.enable=true"
     environment:
@@ -133,6 +151,9 @@ services:
     container_name: ts-flaresolverr
     hostname: flaresolverr
     restart: unless-stopped
+    env_file:
+      - /media/docker/scripts/.env
+      - /media/docker/secrets/.env.secrets
     labels:
       - "com.centurylinklabs.watchtower.enable=true"
     cap_add:
@@ -158,6 +179,9 @@ services:
     image: lscr.io/linuxserver/sonarr:latest
     container_name: sonarr
     restart: unless-stopped
+    env_file:
+      - /media/docker/scripts/.env
+      - /media/docker/secrets/.env.secrets
     labels:
       - "com.centurylinklabs.watchtower.enable=true"
     environment:
@@ -179,6 +203,9 @@ services:
     container_name: ts-sonarr
     hostname: sonarr
     restart: unless-stopped
+    env_file:
+      - /media/docker/scripts/.env
+      - /media/docker/secrets/.env.secrets
     labels:
       - "com.centurylinklabs.watchtower.enable=true"
     cap_add:
@@ -204,6 +231,9 @@ services:
     image: lscr.io/linuxserver/radarr:latest
     container_name: radarr
     restart: unless-stopped
+    env_file:
+      - /media/docker/scripts/.env
+      - /media/docker/secrets/.env.secrets
     labels:
       - "com.centurylinklabs.watchtower.enable=true"
     environment:
@@ -225,6 +255,9 @@ services:
     container_name: ts-radarr
     hostname: radarr
     restart: unless-stopped
+    env_file:
+      - /media/docker/scripts/.env
+      - /media/docker/secrets/.env.secrets
     labels:
       - "com.centurylinklabs.watchtower.enable=true"
     cap_add:
@@ -250,6 +283,9 @@ services:
     image: ghcr.io/seerr-team/seerr:latest
     container_name: seerr
     restart: unless-stopped
+    env_file:
+      - /media/docker/scripts/.env
+      - /media/docker/secrets/.env.secrets
     labels:
       - "com.centurylinklabs.watchtower.enable=true"
     environment:
@@ -267,6 +303,9 @@ services:
     container_name: ts-seerr
     hostname: seerr
     restart: unless-stopped
+    env_file:
+      - /media/docker/scripts/.env
+      - /media/docker/secrets/.env.secrets
     labels:
       - "com.centurylinklabs.watchtower.enable=true"
     cap_add:
