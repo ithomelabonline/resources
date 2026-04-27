@@ -1,0 +1,18 @@
+# Secrets & environment
+*.env
+!common.env
+secrets/
+ 
+# Docker config exclusions
+docker/configs/portainer_data/
+docker/configs/syncthing/
+docker/configs/tailscale/ittools/
+docker/configs/tailscale/portainer/
+docker/configs/tailscale/syncthing/
+ 
+# Docker scripts exclusions
+docker/scripts/secrets/
+ 
+# OS noise
+.DS_Store
+Thumbs.db

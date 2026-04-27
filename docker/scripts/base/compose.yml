@@ -1,0 +1,174 @@
+services:
+  # =====================
+  # Portainer
+  # =====================
+  portainer:
+    image: portainer/portainer-ce:latest
+    container_name: portainer
+    restart: unless-stopped
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TIME_ZONE}
+    volumes:
+      - ${CONFIG}/portainer_data:/data
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /media:/media
+    networks:
+      portainer_net:
+        ipv4_address: 172.20.1.10
+
+  ts-portainer:
+    image: tailscale/tailscale:latest
+    container_name: ts-portainer
+    hostname: portainer
+    restart: unless-stopped
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    volumes:
+      - ${CONFIG}/tailscale/portainer:/var/lib/tailscale
+      - /dev/net/tun:/dev/net/tun
+    environment:
+      - TS_STATE_DIR=/var/lib/tailscale
+      - TS_AUTHKEY=${TS_AUTHKEY}
+      - TS_HOSTNAME=portainer
+      - TS_ACCEPT_DNS=true
+      - TS_USERSPACE=false
+    networks:
+      portainer_net:
+        ipv4_address: 172.20.1.11
+
+  # =====================
+  # IT-Tools
+  # =====================
+  it-tools:
+    image: corentinth/it-tools:latest
+    container_name: it-tools
+    restart: unless-stopped
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TIME_ZONE}
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
+    networks:
+      ittools_net:
+        ipv4_address: 172.20.2.10
+
+  ts-ittools:
+    image: tailscale/tailscale:latest
+    container_name: ts-ittools
+    hostname: it-tools
+    restart: unless-stopped
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    volumes:
+      - ${CONFIG}/tailscale/ittools:/var/lib/tailscale
+      - /dev/net/tun:/dev/net/tun
+    environment:
+      - TS_STATE_DIR=/var/lib/tailscale
+      - TS_AUTHKEY=${TS_AUTHKEY}
+      - TS_HOSTNAME=it-tools
+      - TS_ACCEPT_DNS=true
+      - TS_USERSPACE=false
+    networks:
+      ittools_net:
+        ipv4_address: 172.20.2.11
+
+  # =====================
+  # Syncthing
+  # =====================
+  syncthing:
+    image: lscr.io/linuxserver/syncthing:latest
+    container_name: syncthing
+    restart: unless-stopped
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TIME_ZONE}
+    volumes:
+      - ${CONFIG}/syncthing:/config
+#      - ${SYNC_DATA}:/data
+    ports:
+      - "22000:22000/tcp"   # TCP file transfers
+      - "22000:22000/udp"   # QUIC file transfers
+      - "21027:21027/udp"   # Local discovery
+    networks:
+      syncthing_net:
+        ipv4_address: 172.20.3.10
+
+  ts-syncthing:
+    image: tailscale/tailscale:latest
+    container_name: ts-syncthing
+    hostname: syncthing
+    restart: unless-stopped
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    volumes:
+      - ${CONFIG}/tailscale/syncthing:/var/lib/tailscale
+      - /dev/net/tun:/dev/net/tun
+    environment:
+      - TS_STATE_DIR=/var/lib/tailscale
+      - TS_AUTHKEY=${TS_AUTHKEY}
+      - TS_HOSTNAME=syncthing
+      - TS_ACCEPT_DNS=true
+      - TS_USERSPACE=false
+    networks:
+      syncthing_net:
+        ipv4_address: 172.20.3.11
+
+  # =====================
+  # Watchtower
+  # =====================
+  watchtower:
+    image: containrrr/watchtower:latest
+    container_name: watchtower
+    restart: unless-stopped
+    environment:
+      - WATCHTOWER_POLL_INTERVAL=300
+      - WATCHTOWER_CLEANUP=true
+      - DOCKER_API_VERSION=1.52
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - base_net
+    command: --label-enable
+
+networks:
+  portainer_net:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.1.0/24
+          gateway: 172.20.1.1
+  ittools_net:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.2.0/24
+          gateway: 172.20.2.1
+  syncthing_net:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.3.0/24
+          gateway: 172.20.3.1
+  base_net:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/24
+          gateway: 172.20.0.1

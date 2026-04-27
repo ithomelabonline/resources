@@ -1,0 +1,294 @@
+services:
+  # =====================
+  # Gluetun VPN
+  # =====================
+  gluetun:
+    image: qmcgaw/gluetun:latest
+    container_name: gluetun
+    restart: unless-stopped
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
+    cap_add:
+      - NET_ADMIN
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    environment:
+      - VPN_SERVICE_PROVIDER=private internet access
+      - OPENVPN_USER=${OPENVPN_USER}
+      - OPENVPN_PASSWORD=${OPENVPN_PASSWORD}
+      - SERVER_REGIONS=${VPN_REGIONS}
+      - TZ=${TIME_ZONE}
+      - DNS_ADDRESS=1.1.1.1
+    volumes:
+      - ${CONFIG}/gluetun:/gluetun
+    networks:
+      downloads_net:
+        ipv4_address: 172.20.4.10
+
+  # =====================
+  # Transmission (through Gluetun)
+  # =====================
+  transmission:
+    image: lscr.io/linuxserver/transmission:latest
+    container_name: transmission
+    restart: unless-stopped
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
+    network_mode: "service:gluetun"
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TIME_ZONE}
+    volumes:
+      - ${CONFIG}/transmission:/config
+      - ${DOWNLOADS}:/downloads
+    depends_on:
+      - gluetun
+
+  ts-transmission:
+    image: tailscale/tailscale:latest
+    container_name: ts-transmission
+    hostname: transmission
+    restart: unless-stopped
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    volumes:
+      - ${CONFIG}/tailscale/transmission:/var/lib/tailscale
+      - /dev/net/tun:/dev/net/tun
+    environment:
+      - TS_STATE_DIR=/var/lib/tailscale
+      - TS_AUTHKEY=${TS_AUTHKEY}
+      - TS_HOSTNAME=transmission
+      - TS_ACCEPT_DNS=true
+      - TS_USERSPACE=false
+    networks:
+      downloads_net:
+        ipv4_address: 172.20.4.11
+
+  # =====================
+  # Prowlarr (through Gluetun)
+  # =====================
+  prowlarr:
+    image: lscr.io/linuxserver/prowlarr:latest
+    container_name: prowlarr
+    restart: unless-stopped
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
+    network_mode: "service:gluetun"
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TIME_ZONE}
+    volumes:
+      - ${CONFIG}/prowlarr:/config
+    depends_on:
+      - gluetun
+
+  ts-prowlarr:
+    image: tailscale/tailscale:latest
+    container_name: ts-prowlarr
+    hostname: prowlarr
+    restart: unless-stopped
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    volumes:
+      - ${CONFIG}/tailscale/prowlarr:/var/lib/tailscale
+      - /dev/net/tun:/dev/net/tun
+    environment:
+      - TS_STATE_DIR=/var/lib/tailscale
+      - TS_AUTHKEY=${TS_AUTHKEY}
+      - TS_HOSTNAME=prowlarr
+      - TS_ACCEPT_DNS=true
+      - TS_USERSPACE=false
+    networks:
+      downloads_net:
+        ipv4_address: 172.20.4.12
+
+  # =====================
+  # FlareSolverr
+  # =====================
+  flaresolverr:
+    image: ghcr.io/flaresolverr/flaresolverr:latest
+    container_name: flaresolverr
+    network_mode: "service:gluetun"
+    restart: unless-stopped
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
+    environment:
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+      - LOG_HTML=${LOG_HTML:-false}
+      - CAPTCHA_SOLVER=${CAPTCHA_SOLVER:-none}
+      - TZ=${TIME_ZONE}
+    depends_on:
+      - gluetun
+
+  ts-flaresolverr:
+    image: tailscale/tailscale:latest
+    container_name: ts-flaresolverr
+    hostname: flaresolverr
+    restart: unless-stopped
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    volumes:
+      - ${CONFIG}/tailscale/flaresolverr:/var/lib/tailscale
+      - /dev/net/tun:/dev/net/tun
+    environment:
+      - TS_STATE_DIR=/var/lib/tailscale
+      - TS_AUTHKEY=${TS_AUTHKEY}
+      - TS_HOSTNAME=flaresolverr
+      - TS_ACCEPT_DNS=true
+      - TS_USERSPACE=false
+    networks:
+      downloads_net:
+        ipv4_address: 172.20.4.14
+
+  # =====================
+  # Sonarr
+  # =====================
+  sonarr:
+    image: lscr.io/linuxserver/sonarr:latest
+    container_name: sonarr
+    restart: unless-stopped
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TIME_ZONE}
+    volumes:
+      - ${CONFIG}/sonarr:/config
+      - ${MEDIA}:/media
+      - ${DOWNLOADS}:/downloads
+    ports:
+      - "8989:8989"
+    networks:
+      downloads_net:
+        ipv4_address: 172.20.4.20
+
+  ts-sonarr:
+    image: tailscale/tailscale:latest
+    container_name: ts-sonarr
+    hostname: sonarr
+    restart: unless-stopped
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    volumes:
+      - ${CONFIG}/tailscale/sonarr:/var/lib/tailscale
+      - /dev/net/tun:/dev/net/tun
+    environment:
+      - TS_STATE_DIR=/var/lib/tailscale
+      - TS_AUTHKEY=${TS_AUTHKEY}
+      - TS_HOSTNAME=sonarr
+      - TS_ACCEPT_DNS=true
+      - TS_USERSPACE=false
+    networks:
+      downloads_net:
+        ipv4_address: 172.20.4.21
+
+  # =====================
+  # Radarr
+  # =====================
+  radarr:
+    image: lscr.io/linuxserver/radarr:latest
+    container_name: radarr
+    restart: unless-stopped
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TIME_ZONE}
+    volumes:
+      - ${CONFIG}/radarr:/config
+      - ${MEDIA}:/media
+      - ${DOWNLOADS}:/downloads
+    ports:
+      - "7878:7878"
+    networks:
+      downloads_net:
+        ipv4_address: 172.20.4.30
+
+  ts-radarr:
+    image: tailscale/tailscale:latest
+    container_name: ts-radarr
+    hostname: radarr
+    restart: unless-stopped
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    volumes:
+      - ${CONFIG}/tailscale/radarr:/var/lib/tailscale
+      - /dev/net/tun:/dev/net/tun
+    environment:
+      - TS_STATE_DIR=/var/lib/tailscale
+      - TS_AUTHKEY=${TS_AUTHKEY}
+      - TS_HOSTNAME=radarr
+      - TS_ACCEPT_DNS=true
+      - TS_USERSPACE=false
+    networks:
+      downloads_net:
+        ipv4_address: 172.20.4.31
+
+  # =====================
+  # Seerr
+  # =====================
+  seerr:
+    image: ghcr.io/seerr-team/seerr:latest
+    container_name: seerr
+    restart: unless-stopped
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TIME_ZONE}
+    volumes:
+      - ${CONFIG}/overseerr:/app/config
+    networks:
+      downloads_net:
+        ipv4_address: 172.20.4.40
+
+  ts-seerr:
+    image: tailscale/tailscale:latest
+    container_name: ts-seerr
+    hostname: seerr
+    restart: unless-stopped
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    volumes:
+      - ${CONFIG}/tailscale/seerr:/var/lib/tailscale
+      - /dev/net/tun:/dev/net/tun
+    environment:
+      - TS_STATE_DIR=/var/lib/tailscale
+      - TS_AUTHKEY=${TS_AUTHKEY}
+      - TS_HOSTNAME=seerr
+      - TS_ACCEPT_DNS=true
+      - TS_USERSPACE=false
+    networks:
+      downloads_net:
+        ipv4_address: 172.20.4.41
+
+networks:
+  downloads_net:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.4.0/24
+          gateway: 172.20.4.1
