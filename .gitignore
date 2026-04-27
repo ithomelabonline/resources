@@ -1,5 +1,4 @@
 # Secrets & environment
-*.env
 secrets/
  
 # Docker config exclusions
