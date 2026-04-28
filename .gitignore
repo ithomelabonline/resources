@@ -10,6 +10,7 @@ docker/configs/tailscale/syncthing/
  
 # Docker scripts exclusions
 docker/scripts/secrets/
+docker/scripts/dev/
  
 # OS noise
 .DS_Store
