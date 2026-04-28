@@ -6,8 +6,6 @@ services:
     image: portainer/portainer-ce:latest
     container_name: portainer
     restart: unless-stopped
-    env_file:
-      - /media/docker/scripts/.env
     labels:
       - "com.centurylinklabs.watchtower.enable=true"
     environment:
@@ -27,9 +25,6 @@ services:
     container_name: ts-portainer
     hostname: portainer
     restart: unless-stopped
-    env_file:
-      - /media/docker/scripts/.env
-      - /media/docker/secrets/.env.secrets
     labels:
       - "com.centurylinklabs.watchtower.enable=true"
     cap_add:
@@ -55,8 +50,6 @@ services:
     image: corentinth/it-tools:latest
     container_name: it-tools
     restart: unless-stopped
-    env_file:
-      - /media/docker/scripts/.env
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
@@ -72,9 +65,6 @@ services:
     container_name: ts-ittools
     hostname: it-tools
     restart: unless-stopped
-    env_file:
-      - /media/docker/scripts/.env
-      - /media/docker/secrets/.env.secrets
     labels:
       - "com.centurylinklabs.watchtower.enable=true"
     cap_add:
@@ -100,8 +90,6 @@ services:
     image: lscr.io/linuxserver/syncthing:latest
     container_name: syncthing
     restart: unless-stopped
-    env_file:
-      - /media/docker/scripts/.env
     labels:
       - "com.centurylinklabs.watchtower.enable=true"
     environment:
@@ -124,9 +112,6 @@ services:
     container_name: ts-syncthing
     hostname: syncthing
     restart: unless-stopped
-    env_file:
-      - /media/docker/scripts/.env
-      - /media/docker/secrets/.env.secrets
     labels:
       - "com.centurylinklabs.watchtower.enable=true"
     cap_add:
