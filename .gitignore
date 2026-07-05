@@ -7,6 +7,9 @@ docker/configs/syncthing/
 docker/configs/tailscale/ittools/
 docker/configs/tailscale/portainer/
 docker/configs/tailscale/syncthing/
+docker/configs/tailscale/n8n/
+docker/configs/n8n/
+docker/configs/
  
 # Docker scripts exclusions
 docker/scripts/secrets/

@@ -1,0 +1,62 @@
+services:
+  # =====================
+  # Virtual DSM
+  # =====================
+  dsm:
+    image: vdsm/virtual-dsm
+    container_name: dsm
+    restart: unless-stopped
+    network_mode: service:ts-dsm
+    environment:
+      - DISK_SIZE=64G
+    devices:
+      - /dev/kvm
+      - /dev/net/tun
+    cap_add:
+      - NET_ADMIN
+    volumes:
+      - ${CONFIG}/dsm/storage:/storage
+      - ${CONFIG}/dsm/DSM_VirtualDSM_72806.pat:/boot.pat
+    stop_grace_period: 2m
+
+  ts-dsm:
+    image: tailscale/tailscale:latest
+    container_name: ts-dsm
+    hostname: dsm
+    restart: unless-stopped
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    ports:
+      - 5000:5000
+    volumes:
+      - ${CONFIG}/tailscale/dsm:/var/lib/tailscale
+      - /dev/net/tun:/dev/net/tun
+    environment:
+      - TS_STATE_DIR=/var/lib/tailscale
+      - TS_AUTHKEY=${TS_AUTHKEY}
+      - TS_HOSTNAME=dsm
+      - TS_ACCEPT_DNS=true
+      - TS_USERSPACE=false
+    networks:
+      home_net:
+        ipv4_address: 172.20.9.21
+
+networks:
+  home_net:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.9.0/24
+
+# Documentation - https://hub.docker.com/r/vdsm/virtual-dsm
+#
+# mkdir /media/docker/configs/dsm
+# sudo chown -R ubuntu:docker /media/docker/configs/dsm
+# cd /media/docker/configs/dsm
+# wget -O DSM_VirtualDSM_72806.pat "https://global.synologydownload.com/download/DSM/release/7.2.2/72806/DSM_VirtualDSM_72806.pat"
+# cd /media/docker/scripts/nas
+# ln -s /media/docker/scripts/.env
+# ln -s /media/docker/secrets/.env.secrets
+# docker compose up -d
+# docker exec ts-dsm tailscale serve -bg http://172.20.9.1:5000

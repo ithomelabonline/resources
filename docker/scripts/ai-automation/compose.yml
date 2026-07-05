@@ -1,0 +1,145 @@
+services:
+  # =====================
+  # n8n Postgres
+  # =====================
+  n8n-postgres:
+    image: postgres:16-alpine
+    container_name: n8n-postgres
+    restart: unless-stopped
+    env_file:
+      - /media/docker/scripts/.env
+      - /media/docker/secrets/.env.secrets
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
+#    user: "${PUID}:${PGID}"
+    environment:
+      - POSTGRES_USER=n8n
+      - POSTGRES_PASSWORD=${N8N_DB_PASSWORD}
+      - POSTGRES_DB=n8n
+      - PGDATA=/var/lib/postgresql/data/pgdata
+    volumes:
+      - ${CONFIG}/n8n/postgres:/var/lib/postgresql/data
+    networks:
+      ai_net:
+        ipv4_address: 172.20.4.10
+
+  # =====================
+  # n8n
+  # =====================
+  n8n:
+    image: n8nio/n8n:latest
+    container_name: n8n
+    restart: unless-stopped
+    network_mode: service:ts-n8n
+    env_file:
+      - /media/docker/scripts/.env
+      - /media/docker/secrets/.env.secrets
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
+    user: "${PUID}:${PGID}"
+    environment:
+      - DB_TYPE=postgresdb
+      - DB_POSTGRESDB_HOST=n8n-postgres
+      - DB_POSTGRESDB_PORT=5432
+      - DB_POSTGRESDB_DATABASE=n8n
+      - DB_POSTGRESDB_USER=n8n
+      - DB_POSTGRESDB_PASSWORD=${N8N_DB_PASSWORD}
+      - N8N_ENCRYPTION_KEY=${N8N_ENCRYPTION_KEY}
+      - WEBHOOK_URL=https://n8n.takaya-cod.ts.net/
+      - GENERIC_TIMEZONE=${TIME_ZONE}
+      - NODE_FUNCTION_ALLOW_BUILTIN=zlib,buffer,crypto,path,fs
+    volumes:
+      - ${CONFIG}/n8n/data:/home/node/.n8n
+    depends_on:
+      - n8n-postgres
+      - ts-n8n
+
+  ts-n8n:
+    image: tailscale/tailscale:latest
+    container_name: ts-n8n
+    hostname: n8n
+    restart: unless-stopped
+    env_file:
+      - /media/docker/scripts/.env
+      - /media/docker/secrets/.env.secrets
+    ports:
+#      - "443:443"
+      - "5678:5678"
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    volumes:
+      - ${CONFIG}/tailscale/n8n:/var/lib/tailscale
+      - /dev/net/tun:/dev/net/tun
+    environment:
+      - TS_STATE_DIR=/var/lib/tailscale
+      - TS_AUTHKEY=${TS_AUTHKEY}
+      - TS_HOSTNAME=n8n
+      - TS_ACCEPT_DNS=true
+      - TS_USERSPACE=false
+    networks:
+      ai_net:
+        ipv4_address: 172.20.4.12
+
+  # =====================
+  # Open WebUI
+  # =====================
+  open-webui:
+    image: ghcr.io/open-webui/open-webui:main
+    container_name: open-webui
+    restart: unless-stopped
+    env_file:
+      - /media/docker/scripts/.env
+      - /media/docker/secrets/.env.secrets
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
+    environment:
+      - OLLAMA_BASE_URL=http://ollama.takaya-cod.ts.net:11434
+    volumes:
+      - ${CONFIG}/open-webui:/app/backend/data
+    network_mode: service:ts-open-webui
+    depends_on:
+      - ts-open-webui
+
+  # =====================
+  # Open WebUI Tailscale Sidecar
+  # =====================
+  ts-open-webui:
+    image: tailscale/tailscale:latest
+    container_name: ts-open-webui
+    hostname: open-webui
+    restart: unless-stopped
+    env_file:
+      - /media/docker/scripts/.env
+      - /media/docker/secrets/.env.secrets
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    volumes:
+      - ${CONFIG}/tailscale/open-webui:/var/lib/tailscale
+      - /dev/net/tun:/dev/net/tun
+    environment:
+      - TS_STATE_DIR=/var/lib/tailscale
+      - TS_AUTHKEY=${TS_AUTHKEY}
+      - TS_HOSTNAME=open-webui
+      - TS_ACCEPT_DNS=true
+      - TS_USERSPACE=false
+    ports:
+      - "3000:8080"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      ai_net:
+        ipv4_address: 172.20.4.20
+
+networks:
+  ai_net:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.4.0/24
+          gateway: 172.20.4.1

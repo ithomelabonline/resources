@@ -1,5 +1,5 @@
-docker compose down
-docker compose up -d
+docker-down
+docker-up
 
 # Wait for startup
 sleep 10
