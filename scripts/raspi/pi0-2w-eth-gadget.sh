@@ -21,7 +21,7 @@
 set -euo pipefail
 
 # ---------------------------------------------------------------------------
-# Configuration - edit these if you want a different subnet
+# Configuration - edit these if you want a different subnet.
 # ---------------------------------------------------------------------------
 USB0_IP="10.55.0.1"
 USB0_PREFIX="24"
