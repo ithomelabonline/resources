@@ -208,7 +208,7 @@ mkdir -p /etc/dnsmasq.d
 cat > /etc/dnsmasq.d/usb0-gadget.conf <<EOF
 # DHCP server for the USB Ethernet gadget interface only
 interface=usb0
-bind-interfaces
+bind-dynamic
 except-interface=lo
 dhcp-range=${DHCP_RANGE_START},${DHCP_RANGE_END},${USB0_NETMASK},${DHCP_LEASE}
 dhcp-option=3,${USB0_IP}
@@ -216,7 +216,7 @@ dhcp-option=6,${USB0_IP}
 EOF
 
 systemctl unmask dnsmasq >/dev/null 2>&1 || true
-systemctl enable dnsmasq >/dev/null
+systemctl enable dnsmasq >/dev/null 2>&1 || true
 systemctl restart dnsmasq || true
 
 # ---------------------------------------------------------------------------
