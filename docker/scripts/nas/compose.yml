@@ -16,7 +16,7 @@ services:
       - NET_ADMIN
     volumes:
       - ${CONFIG}/dsm/storage:/storage
-      - ${CONFIG}/dsm/DSM_VirtualDSM_72806.pat:/boot.pat
+      - ${CONFIG}/dsm/DSM_VirtualDSM_90075.pat:/boot.pat
     stop_grace_period: 2m
 
   ts-dsm:

@@ -1,0 +1,56 @@
+services:
+  # =====================
+  # Vaultwarden
+  # =====================
+  vaultwarden:
+    image: vaultwarden/server:latest
+    container_name: vaultwarden
+    restart: unless-stopped
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
+    stop_grace_period: 30s
+    environment:
+      - TZ=${TIME_ZONE}
+      - ADMIN_TOKEN=${VAULTWARDEN_ADMIN_TOKEN}
+      - SIGNUPS_ALLOWED=true
+    volumes:
+      - ${CONFIG}/vaultwarden/data:/data
+    network_mode: service:ts-vaultwarden
+    depends_on:
+      - ts-vaultwarden
+
+  # =====================
+  # Vaultwarden Tailscale Sidecar
+  # =====================
+  ts-vaultwarden:
+    image: tailscale/tailscale:latest
+    container_name: ts-vaultwarden
+    hostname: vaultwarden
+    restart: unless-stopped
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    volumes:
+      - ${CONFIG}/tailscale/vaultwarden:/var/lib/tailscale
+      - /dev/net/tun:/dev/net/tun
+    environment:
+      - TS_STATE_DIR=/var/lib/tailscale
+      - TS_AUTHKEY=${TS_AUTHKEY}
+      - TS_HOSTNAME=vaultwarden
+      - TS_ACCEPT_DNS=true
+      - TS_USERSPACE=false
+    ports:
+      - "8084:80"
+    networks:
+      security_net:
+        ipv4_address: 172.20.17.10
+
+networks:
+  security_net:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.17.0/24
+          gateway: 172.20.17.1

@@ -1,7 +1,7 @@
 docker compose down
 mkdir /media/docker/configs/dsm
 sudo chown -R ubuntu:docker /media/docker/configs/dsm
-wget -O /media/docker/configs/dsm/DSM_VirtualDSM_72806.pat "https://global.synologydownload.com/download/DSM/release/7.2.2/72806/DSM_VirtualDSM_72806.pat"
+wget -O /media/docker/configs/dsm/DSM_VirtualDSM_90075.pat "https://global.synologydownload.com/download/DSM/release/7.4/90075/DSM_VirtualDSM_90075.pat"
 sudo chown -R ubuntu:docker /media/docker/configs/dsm
 set -a
 source /media/docker/scripts/.env
